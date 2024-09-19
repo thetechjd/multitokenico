@@ -401,9 +401,9 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
 
     address payable owner;
 
-    uint8 public vestingPeriods = 12;
-    uint8 public vestingPercent = 67;
-    uint8 public tgePercent = 200;
+    uint8 public vestingPeriods = 90;
+    uint8 public vestingPercent = 1;
+    uint8 public tgePercent = 10;
 
     struct Buyer {
         address buyer;
@@ -422,7 +422,7 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
     uint256 public sold;
     uint256 public tokenPrice = 0.01 * 10 ** 16;//0.01 USD
     uint256 public endTime;
-    uint256 public nextClaim = 2629743; //1 month; change this depending on how many rounds there will be
+    uint256 public nextClaim = 86400; //1 day; change this depending on how many rounds there will be
     uint256 public tge; //Token-Generating-Event (TGE) when you plan to release the tokens, in epoch time (seconds)
    
 
