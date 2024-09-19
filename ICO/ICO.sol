@@ -45,9 +45,19 @@ abstract contract PriceConsumerV3 {
      * Aggregator: ETH/USD
      * Address: 0x694AA1769357215DE4FAC081bf1f309aDC325306
      */
+    /**
+     * Network: BSC Mainnet
+     * Aggregator: ETH/USD
+     * Address: 0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE
+     */
+    /**
+     * Network: BSC Testnet
+     * Aggregator: BNB/USD
+     * Address: 0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
+     */
     constructor() {
         priceFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
+            0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
         );
     }
 
@@ -457,13 +467,13 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
         
 
          // Get the latest ETH/USD price
-        uint256 ethPriceInUSD = getRoundedETHPrice(); // 8 decimals
+        uint256 bnbPriceInUSD = getRoundedBNBPrice(); // 8 decimals
 
-        // Convert ETH received (msg.value) to USD. ETH has 18 decimals, price has 8 decimals, so we scale up.
-        uint256 ethAmountInUSD = (msg.value * ethPriceInUSD) / 10**8;
+        // Convert BNB received (msg.value) to USD.BNB has 18 decimals, price has 8 decimals, so we scale up.
+        uint256 bnbAmountInUSD = (msg.value * bnbPriceInUSD) / 10**8;
 
         // Now calculate how many tokens the user gets based on the token price in USD (18 decimals)
-        uint256 tokensToBuy = (ethAmountInUSD * 10**18) / tokenPrice;
+        uint256 tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice;
 
         // Record the contribution
         contributions[msg.sender].buyer = msg.sender;
@@ -494,15 +504,15 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
     }
 
     function addBuyers(address [] calldata  _buyerAddress, uint256 [] calldata _amount ) external onlyOwner {
-         // Get the latest ETH/USD price
-        uint256 ethPriceInUSD = getRoundedETHPrice(); // 8 decimals
+         // Get the latest BNB/USD price
+        uint256 bnbPriceInUSD = getRoundedBNBPrice(); // 8 decimals
 
        
         for(uint8 i = 0; i < _buyerAddress.length; i++){
 
             uint256 amountInUSD = _amount[i] * tokenPrice;
             
-        uint256 value = (amountInUSD * 10 ** 8) / ethPriceInUSD;
+        uint256 value = (amountInUSD * 10 ** 8) / bnbPriceInUSD;
 
             contributions[msg.sender].buyer = _buyerAddress[i];
             contributions[msg.sender].amountFunded += value;
@@ -513,10 +523,10 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
 
     }
 
-    function getRoundedETHPrice() public view returns (uint256) {
+    function getRoundedBNBPrice() public view returns (uint256) {
         uint256 rawPrice = uint256(getLatestPrice());
-        uint256 ethPrice = rawPrice / 10**8;
-        return ethPrice * 10**18;
+        uint256 bnbPrice = rawPrice / 10**8;
+        return bnbPrice * 10**18;
     }
 
     
