@@ -413,7 +413,18 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
 
     uint8 public vestingPeriods = 90;
     uint8 public vestingPercent = 1;
-    uint8 public tgePercent = 10;
+    uint8 public tgePercent = 10; // 1% 
+
+    uint public bronze = 5000;
+    uint public silver = 10000;
+    uint public gold = 25000;
+    uint public diamond = 50000;
+
+    uint8 public bronzePct = 1;
+    uint8 public silverPct = 3;
+    uint8 public goldPct = 6;
+    uint8 public diamondPct = 10;
+
 
     struct Buyer {
         address buyer;
@@ -506,6 +517,8 @@ function generateRefCode(address _addr) public {
         } else {
             tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice ;
         }
+
+        tokensToBuy = processTiers(tokensToBuy);
         
 
         // Record the contribution
@@ -517,14 +530,25 @@ function generateRefCode(address _addr) public {
         // Update total tokens sold
         sold += tokensToBuy;
     }
-    function buyTokenswithUSDT(uint256 _amount) external {
+    function buyTokenswithUSDT(uint256 _amount, uint256 _refCode) external {
         require(_amount >= tokenPrice, "Insufficient amount sent");
         require(block.timestamp < endTime, "Current round has already ended!");
+        require(referrers[_refCode] != msg.sender, "Can't refer yourself");
         require(saleActive, "Crowdsale is not active or has concluded");
-        
 
-        // Now calculate how many tokens the user gets based on the token price in USD (18 decimals)
-        uint256 tokensToBuy = (_amount * 10**18) / tokenPrice;
+
+        uint256 tokensToBuy;
+
+        if(referrers[_refCode] != address(0)){
+            tokensToBuy = (_amount * 10**18) / tokenPrice ;
+            tokensToBuy = (tokensToBuy * 5 / 100) + tokensToBuy;
+        } else {
+            tokensToBuy = (_amount * 10**18) / tokenPrice ;
+        }
+
+        tokensToBuy = processTiers(tokensToBuy);
+
+       
 
         // Record the contribution
         contributions[msg.sender].buyer = msg.sender;
@@ -560,6 +584,25 @@ function generateRefCode(address _addr) public {
         uint256 rawPrice = uint256(getLatestPrice());
         uint256 bnbPrice = rawPrice / 10**8;
         return bnbPrice * 10**18;
+    }
+
+    function processTiers(uint256 _amount) public view returns (uint256) {
+        uint256 amount = _amount;
+
+        if(amount >= bronze){
+            amount = (amount * bronzePct / 100) + amount;
+        }
+        else if(amount >= silver){
+            amount = (amount * silverPct / 100) + amount;
+        }
+        else if(amount >= gold){
+            amount = (amount * goldPct / 100) + amount;
+        }
+        else if(amount >= diamond){
+            amount = (amount * diamondPct / 100) + amount;
+        }
+
+        return amount;
     }
 
     
@@ -679,6 +722,27 @@ function generateRefCode(address _addr) public {
 
     function setToken(address _token) external onlyOwner{
         token = IERC20(_token);
+    }
+
+    function setTiers(
+        uint256 _bronze,
+        uint256 _silver,
+        uint256 _gold,
+        uint256 _diamond,
+        uint8 _bronzePct,
+        uint8 _silverPct,
+        uint8 _goldPct,
+        uint8 _diamondPct
+    ) external onlyOwner {
+        require(_bronzePct < 100 && _silverPct < 100 && _goldPct < 100 && _diamondPct < 100, "Percentage cannot be greater than 100");
+        bronze = _bronze;
+        silver = _silver;
+        gold = _gold;
+        diamond = _diamond;
+        bronzePct = _bronzePct;
+        silverPct = _silverPct;
+        goldPct = _goldPct;
+        diamondPct = _diamondPct;
     }
 
 
