@@ -427,6 +427,8 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
    
 
     mapping(address => Buyer) public contributions;
+    mapping(uint256 => address) public referrers;
+    mapping(address => uint256) public refByAddr;
     
 
     uint256 public sold;
@@ -460,11 +462,35 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
         return contributions[_addr].amountDue;
     }
 
-    function buyTokens() external payable {
+    //create random referral code
+
+function random(address i) private view returns(uint256){
+        return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, i))) % 10000000000;
+    }
+
+function addReferralAddress(address _addr) private {
+
+        uint256 _referralCode = random(_addr);
+        referrers[_referralCode] = _addr;
+        refByAddr[_addr] = _referralCode;
+        
+    }
+
+function getRefByAddr(address _addr) public view returns (uint256){
+    return refByAddr[_addr];
+}
+
+function generateRefCode(address _addr) public {
+    addReferralAddress(_addr);
+}
+
+
+    function buyTokens(uint256 _refCode) external payable {
         require(msg.value >= tokenPrice, "Insufficient amount sent");
         require(block.timestamp < endTime, "Current round has already ended!");
+        require(referrers[_refCode] != msg.sender, "Can't refer yourself");
         require(saleActive, "Crowdsale is not active or has concluded");
-        
+
 
          // Get the latest ETH/USD price
         uint256 bnbPriceInUSD = getRoundedBNBPrice(); // 8 decimals
@@ -472,8 +498,15 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
         // Convert BNB received (msg.value) to USD.BNB has 18 decimals, price has 8 decimals, so we scale up.
         uint256 bnbAmountInUSD = (msg.value * bnbPriceInUSD) / 10**8;
 
-        // Now calculate how many tokens the user gets based on the token price in USD (18 decimals)
-        uint256 tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice;
+        uint256 tokensToBuy;
+
+        if(referrers[_refCode] != address(0)){
+            tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice ;
+            tokensToBuy = (tokensToBuy * 5 / 100) + tokensToBuy;
+        } else {
+            tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice ;
+        }
+        
 
         // Record the contribution
         contributions[msg.sender].buyer = msg.sender;
