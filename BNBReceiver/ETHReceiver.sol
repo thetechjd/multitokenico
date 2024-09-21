@@ -57,7 +57,7 @@ abstract contract PriceConsumerV3 {
      */
     constructor() {
         priceFeed = AggregatorV3Interface(
-            0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
         );
     }
 
@@ -79,7 +79,7 @@ abstract contract PriceConsumerV3 {
 
 
 
-contract BNBReceiver is PriceConsumerV3{
+contract ETHReceiver is PriceConsumerV3{
 
     uint256 public tokenPrice = 0.01 * 10 ** 16;//0.01 USD
     address owner;
@@ -104,16 +104,16 @@ contract BNBReceiver is PriceConsumerV3{
         return users;
     }
 
-    function payWithBNB() external payable {
+    function payWithETH() external payable {
         require(msg.value > 0, "cannot send zero amount");
          // Get the latest BNB/USD price
-        uint256 bnbPriceInUSD = getRoundedBNBPrice(); // 8 decimals
+        uint256 ethPriceInUSD = getRoundedETHPrice(); // 8 decimals
 
         // Convert BNB received (msg.value) to USD. BNB has 18 decimals, price has 8 decimals, so we scale up.
-        uint256 bnbAmountInUSD = (msg.value * bnbPriceInUSD) / 10**8;
+        uint256 ethAmountInUSD = (msg.value * ethPriceInUSD) / 10**8;
 
         // Now calculate how many tokens the user gets based on the token price in USD (18 decimals)
-        uint256 tokensToBuy = (bnbAmountInUSD * 10**18) / tokenPrice;
+        uint256 tokensToBuy = (ethAmountInUSD * 10**18) / tokenPrice;
 
 
         users.push(User({
@@ -122,14 +122,14 @@ contract BNBReceiver is PriceConsumerV3{
             }));
     }
 
-    function getRoundedBNBPrice() public view returns (uint256) {
+    function getRoundedETHPrice() public view returns (uint256) {
         uint256 rawPrice = uint256(getLatestPrice());
         uint256 ethPrice = rawPrice / 10**8;
         return ethPrice * 10**18;
     }
 
 
-    function getTotalBNB() public view returns (uint256){
+    function getTotalETH() public view returns (uint256){
         uint256 total;
         for(uint8 i = 0; i < users.length; i++){
             total += users[i].amount;

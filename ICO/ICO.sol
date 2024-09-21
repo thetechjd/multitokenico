@@ -723,6 +723,9 @@ function generateRefCode(address _addr) public {
     function setToken(address _token) external onlyOwner{
         token = IERC20(_token);
     }
+    function setUSDT(address _token) external onlyOwner{
+        usdt = IERC20(_token);
+    }
 
     function setTiers(
         uint256 _bronze,
@@ -764,10 +767,5 @@ function generateRefCode(address _addr) public {
         // =============================================================================
     }
 
-    function refund(address _addr) private {
-        uint256 amountFunded = contributions[_addr].amountFunded;
-        delete contributions[_addr];
-        (bool os, ) = payable(_addr).call{value: amountFunded}("");
-        require(os);
-    }
+    
 }
