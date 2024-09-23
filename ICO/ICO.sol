@@ -57,7 +57,7 @@ abstract contract PriceConsumerV3 {
      */
     constructor() {
         priceFeed = AggregatorV3Interface(
-            0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
         );
     }
 
@@ -415,14 +415,16 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
     uint8 public vestingPercent = 1;
     uint8 public tgePercent = 10; // 1% 
 
-    uint public bronze = 5000;
-    uint public silver = 10000;
-    uint public gold = 25000;
-    uint public diamond = 50000;
+    uint public bronze = 1000; //in usd
+    uint public silver = 5000;
+    uint public gold = 10000;
+    uint public platinum = 25000;
+    uint public diamond = 100000;
 
     uint8 public bronzePct = 1;
     uint8 public silverPct = 3;
     uint8 public goldPct = 6;
+    uint8 public platinumPct = 8;
     uint8 public diamondPct = 10;
 
 
@@ -443,13 +445,13 @@ contract ICO is PriceConsumerV3, ReentrancyGuard {
     
 
     uint256 public sold;
-    uint256 public tokenPrice = 0.01 * 10 ** 16;//0.01 USD
+    uint256 public tokenPrice = 1 * 10 ** 16;//0.01 USD
     uint256 public endTime;
     uint256 public nextClaim = 86400; //1 day; change this depending on how many rounds there will be
     uint256 public tge; //Token-Generating-Event (TGE) when you plan to release the tokens, in epoch time (seconds)
    
 
-    bool public saleActive = true;
+    bool public saleActive = false;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
@@ -531,7 +533,7 @@ function generateRefCode(address _addr) public {
         sold += tokensToBuy;
     }
     function buyTokenswithUSDT(uint256 _amount, uint256 _refCode) external {
-        require(_amount >= tokenPrice, "Insufficient amount sent");
+        require(_amount * 10 ** 18 >= tokenPrice, "Insufficient amount sent");
         require(block.timestamp < endTime, "Current round has already ended!");
         require(referrers[_refCode] != msg.sender, "Can't refer yourself");
         require(saleActive, "Crowdsale is not active or has concluded");
@@ -589,16 +591,19 @@ function generateRefCode(address _addr) public {
     function processTiers(uint256 _amount) public view returns (uint256) {
         uint256 amount = _amount;
 
-        if(amount >= bronze){
+        if((amount * 10 ** 16) / 10 ** 18  >= bronze){
             amount = (amount * bronzePct / 100) + amount;
         }
-        else if(amount >= silver){
+        else if((amount * 10 ** 16) / 10 ** 18 >= silver){
             amount = (amount * silverPct / 100) + amount;
         }
-        else if(amount >= gold){
+        else if((amount * 10 ** 16) / 10 ** 18 >= gold){
             amount = (amount * goldPct / 100) + amount;
         }
-        else if(amount >= diamond){
+        else if((amount * 10 ** 16) / 10 ** 18 >= platinum){
+            amount = (amount * platinumPct / 100) + amount;
+        }
+        else if((amount * 10 ** 16) / 10 ** 18 >= diamond){
             amount = (amount * diamondPct / 100) + amount;
         }
 
@@ -731,20 +736,24 @@ function generateRefCode(address _addr) public {
         uint256 _bronze,
         uint256 _silver,
         uint256 _gold,
+        uint256 _platinum,
         uint256 _diamond,
         uint8 _bronzePct,
         uint8 _silverPct,
         uint8 _goldPct,
+        uint8 _platinumPct,
         uint8 _diamondPct
     ) external onlyOwner {
-        require(_bronzePct < 100 && _silverPct < 100 && _goldPct < 100 && _diamondPct < 100, "Percentage cannot be greater than 100");
+        require(_bronzePct < 100 && _silverPct < 100 && _goldPct < 100 && _platinumPct < 100 && _diamondPct < 100, "Percentage cannot be greater than 100");
         bronze = _bronze;
         silver = _silver;
         gold = _gold;
+        platinum = _platinum;
         diamond = _diamond;
         bronzePct = _bronzePct;
         silverPct = _silverPct;
         goldPct = _goldPct;
+        platinumPct = _platinumPct;
         diamondPct = _diamondPct;
     }
 
